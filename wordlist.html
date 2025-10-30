@@ -430,7 +430,7 @@
                  'all': '전체',
                  '기본 형용사/부사': '형용사/부사',
                  '의문사/감탄사': '의문사/감탄'
-                 // (Eng v1.0) 영어 카테고리는 '영어.txt' 파일 기준으로 동적 생성됩니다.
+                 // (Eng v1.0) 영어 카테고리는 'voca-core-eng.json' 파일 기준으로 동적 생성됩니다.
              };
 
             // (v3.4 모바일 호환성 수정)
@@ -460,12 +460,12 @@
             }
 
             try {
-                // (Eng v1.0) '스페인어.txt' -> '영어.txt'로 변경
-                const response = await fetch('영어.txt');
+                // (Eng v1.0) 'voca-core-eng.json' 파일로 변경
+                const response = await fetch('voca-core-eng.json'); // [수정됨]
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 allWords = await response.json();
 
-                // (Eng v1.0) 총 단어 수 업데이트 (스페인어 -> 영어)
+                // (Eng v1.0) 총 단어 수 업데이트
                 totalWordCount.textContent = `총 ${allWords.length}개의 영어 단어 (빈출도 순서)`;
 
                 // (v3.3) 주제 필터 탭 생성
@@ -487,7 +487,7 @@
             } catch (error) {
                 console.error("단어 데이터 로딩 실패:", error);
                 // (Eng v1.0) 오류 메시지 수정
-                tableBody.innerHTML = `<tr><td colspan="3" class="loading-message">단어 파일을 불러오는 데 실패했습니다.<br>'영어.txt' 파일이 같은 폴더에 있는지 확인해주세요.</td></tr>`; 
+                tableBody.innerHTML = `<tr><td colspan="3" class="loading-message">단어 파일을 불러오는 데 실패했습니다.<br>'voca-core-eng.json' 파일이 같은 폴더에 있는지 확인해주세요.</td></tr>`; // [수정됨]
                 categoryFilterGrid.innerHTML = `<button class="category-btn active" data-category="all">필터 로드 실패</button>`; // (v3.3)
             }
 
