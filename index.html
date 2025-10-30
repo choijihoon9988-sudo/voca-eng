@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voca-Core ENG (v1.0): 수능 영어</title>
+    <style>
+        /* --- CSS 변수 및 기본 스타일 --- */
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --background-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            color: var(--dark-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        /* --- 애플리케이션 레이아웃 --- */
+       .app-container {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        header {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 0;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        /* --- 헤더 아래 네비게이션 링크 --- */
+        .navigation-links {
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .nav-link {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .nav-link:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        /* --- 여기까지 --- */
+
+
+        /* --- 학습 진행률 UI --- */
+       .progress-container {
+            width: 100%;
+        }
+
+       .progress-text {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+       .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+       .progress-bar-inner {
+            height: 100%;
+            width: 0%;
+            background-color: var(--success-color);
+            transition: width 0.3s ease-in-out;
+        }
+
+        /* --- 탭 공통 스타일 --- */
+       .tabs-container {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: var(--border-radius);
+            padding: 5px;
+        }
+
+       .tabs-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+       }
+
+       .tabs-grid button {
+            flex: 1 1 auto;
+            min-width: 80px;
+            padding: 0.7rem 0.5rem;
+            border: none;
+            background-color: transparent;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 9px;
+            transition: all 0.3s ease;
+       }
+       .tabs-grid button:hover:not(.active) {
+            background-color: #dfe3e7;
+       }
+       .tabs-grid button.active {
+            background-color: var(--card-bg);
+            color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+       }
+
+       /* 현재 학습 현황 텍스트 */
+       .context-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--secondary-color);
+            text-align: center;
+            margin-top: 0.5rem;
+            min-height: 1.2em;
+       }
+
+        /* --- 메인 콘텐츠 (카드 & 퀴즈) --- */
+        #main-content {
+            width: 100%;
+            min-height: 450px;
+            display: flex;
+            flex-direction: column;
+        }
+
+       .card-container {
+            width: 100%;
+            height: 450px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+       .card__inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+       .card-container.is-flipped .card__inner {
+            transform: rotateY(180deg);
+        }
+
+       .card__face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+       .card__face--back {
+            transform: rotateY(180deg);
+        }
+
+       .tts-speaker-btn {
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0 0.5rem;
+            vertical-align: middle;
+            color: var(--secondary-color);
+            transition: color 0.2s ease;
+        }
+       .tts-speaker-btn:hover {
+            color: var(--primary-color);
+        }
+
+       .card-front-header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+       }
+
+       .card-lemma {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            margin-right: 0.5rem;
+        }
+
+       .card-pos {
+            font-size: 1rem;
+            font-style: italic;
+            color: var(--secondary-color);
+            width: 100%;
+            margin-bottom: 0.25rem;
+        }
+
+       .card-content-section {
+            margin-bottom: 1.5rem;
+        }
+       .card-content-section:last-child {
+            margin-bottom: 0;
+        }
+
+       .card-content-section h3 {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+       .card-content-section h3 .tts-speaker-btn {
+            font-size: 1.2rem;
+        }
+
+       .card-korean-meaning {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+       .card-example {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+       .card-example-translation {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            margin-top: 0.5rem;
+        }
+
+       .card-inflected {
+            font-size: 1rem;
+            color: var(--primary-color);
+            font-weight: 500;
+            line-height: 1.5;
+            word-break: break-all;
+        }
+       .card-inflected span {
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+
+       .quiz-container {
+            width: 100%;
+            height: 450px;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+       .quiz-question-sentence {
+            font-size: 1.25rem;
+            line-height: 1.7;
+            text-align: center;
+            color: var(--dark-color);
+            margin-bottom: 1rem;
+        }
+
+       .quiz-question-sentence strong {
+            color: var(--primary-color);
+            font-family: monospace;
+            font-size: 1.3rem;
+        }
+
+       .quiz-hint {
+            font-size: 1.1rem;
+            text-align: center;
+            color: var(--secondary-color);
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+       .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+       .option-btn {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            background-color: #fcfcfc;
+            color: var(--dark-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+       .option-btn:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+       .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.9;
+        }
+       .option-btn.correct {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+            font-weight: bold;
+        }
+       .option-btn.incorrect {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+            color: white;
+        }
+
+       .quiz-feedback {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            border-top: 1px solid #eee;
+            padding-top: 1.5rem;
+        }
+
+       .quiz-feedback p {
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+        }
+       .quiz-feedback p.correct { color: var(--success-color); }
+       .quiz-feedback p.incorrect { color: var(--danger-color); }
+
+       .quiz-feedback button {
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+       .btn-review-mistake {
+            background-color: transparent;
+            border: 2px solid var(--warning-color);
+            color: var(--warning-color);
+        }
+       .btn-review-mistake:hover {
+            background-color: var(--warning-color);
+            color: var(--dark-color);
+       }
+
+       .btn-next-quiz {
+            background-color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            color: white;
+       }
+       .btn-next-quiz:hover {
+            opacity: 0.8;
+       }
+
+       .knowledge-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            width: 100%;
+        }
+
+       .knowledge-controls button {
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: bold;
+            border: 2px solid;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+       .btn-unknown {
+            background-color: transparent;
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+       .btn-unknown:hover {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+       .btn-known {
+            background-color: transparent;
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+       .btn-known:hover {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        /* (v3.5) Footer 버튼 스타일 수정 */
+       .navigation-controls {
+            display: flex;
+            justify-content: center; /* 버튼 하나 중앙 정렬 */
+            width: 100%;
+            min-height: 48px; /* 버튼이 없을 때도 공간 유지 */
+        }
+        /* (v3.5) 이전/다음 버튼 관련 스타일 제거 */
+       /* .navigation-controls button { ... } */
+       /* .navigation-controls button#btn-prev, .navigation-controls button#btn-next { ... } */
+       /* .navigation-controls button:hover { ... } */
+       /* .navigation-controls button:disabled { ... } */
+
+        /* (v3.5) '퀴즈로 돌아가기' 버튼 스타일 유지 및 중앙 정렬 */
+       .navigation-controls button#btn-back-to-quiz {
+            background-color: var(--secondary-color);
+            color: white;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            transition: all 0.2s ease;
+            width: 100%; /* 버튼이 하나일 때 전체 너비 차지 */
+            max-width: 300px; /* 최대 너비 제한 */
+       }
+        .navigation-controls button#btn-back-to-quiz:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+       }
+
+
+       .message-container {
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+            height: 450px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 2rem;
+        }
+
+       .hidden {
+            display: none !important;
+        }
+
+        /* --- (신규) 푸터 스타일 --- */
+       .app-footer {
+            width: 100%;
+            max-width: 420px; /* app-container와 동일하게 */
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            margin-top: 1rem;
+            line-height: 1.6;
+        }
+       .app-footer p {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>Voca-Core ENG (v1.0)</h1>
+        </header>
+        <div class="navigation-links">
+            <a href="wordlist.html" class="nav-link">&larr; 전체 단어 목록</a>
+            <a href="pdf_library.html" class="nav-link">PDF 자료실 &rarr;</a>
+        </div>
+        
+        <section class="progress-container">
+            <p class="progress-text" id="progress-text">단어 로딩 중...</p>
+            <div class="progress-bar">
+                <div class="progress-bar-inner" id="progress-bar-inner"></div>
+            </div>
+        </section>
+        
+        <nav class="tabs-container mode-tabs">
+            <div class="tabs-grid">
+                <button class="mode-btn active" data-mode="card">플래시카드</button>
+                <button class="mode-btn" data-mode="review">'몰라요' 복습</button>
+                <button class="mode-btn" data-mode="grammar-quiz">문법 퀴즈</button>
+                <button class="mode-btn" data-mode="cloze-quiz">예문 퀴즈</button>
+            </div>
+            <p class="context-text" id="context-text">학습 현황 로딩 중...</p>
+        </nav>
+
+        <main id="main-content">
+            <div class="message-container">
+                <p>데이터를 불러오고 있습니다...</p>
+            </div>
+        </main>
+
+        <section class="knowledge-controls" id="knowledge-controls">
+            <button class="btn-unknown" id="btn-unknown">❌ 몰라요</button>
+            <button class="btn-known" id="btn-known">✅ 알아요</button>
+        </section>
+
+        <footer class="navigation-controls" id="navigation-controls">
+            <button id="btn-back-to-quiz" class="hidden">◀ 퀴즈로 돌아가기</button>
+            </footer>
+    </div>
+
+    <footer class="app-footer">
+        <p>© 지후를 가장 응원하는 최재영</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- 상태 관리 변수 ---
+            let allWordsData = [];
+            let allWords = [];
+            let filteredWords = [];
+            let currentIndex = 0;
+            let progress = {};
+            let currentMode = 'card';
+
+            const LOCAL_STORAGE_KEY = 'vocaCoreEngProgress'; // (수정)
+
+            let lastQuizMode = 'grammar-quiz';
+            let quizReturnIndex = 0;
+            let currentUtterance = null;
+
+            // --- UI 텍스트 매핑 ---
+            const MODE_NAMES = {
+                'card': '플래시카드',
+                'review': "'몰라요' 복습",
+                'grammar-quiz': '문법 퀴즈',
+                'cloze-quiz': '예문 퀴즈'
+            };
+
+            // --- DOM 요소 참조 ---
+            const mainContent = document.getElementById('main-content');
+            const progressText = document.getElementById('progress-text');
+            const progressBarInner = document.getElementById('progress-bar-inner');
+            const contextText = document.getElementById('context-text');
+            const knowledgeControls = document.getElementById('knowledge-controls');
+            const navigationControls = document.getElementById('navigation-controls');
+            // (v3.5) btnPrev, btnNext 제거
+            const btnKnown = document.getElementById('btn-known');
+            const btnUnknown = document.getElementById('btn-unknown');
+            const modeButtons = document.querySelectorAll('.mode-btn');
+            const btnBackToQuiz = document.getElementById('btn-back-to-quiz');
+
+
+            // --- TTS 음성 출력 함수 (v3.4 수정됨) ---
+            function speakText(text, lang = 'en-US') { // (수정)
+                if (!('speechSynthesis' in window)) {
+                    alert('죄송합니다. 이 브라우저는 음성 합성을 지원하지 않습니다.');
+                    return;
+                }
+                window.speechSynthesis.cancel();
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                currentUtterance.lang = lang;
+                currentUtterance.rate = 0.9;
+                currentUtterance.onerror = (event) => {
+                    console.error('SpeechSynthesisUtterance.onerror', event);
+                    currentUtterance = null;
+                };
+                currentUtterance.onend = () => {
+                    currentUtterance = null;
+                };
+                window.speechSynthesis.speak(currentUtterance);
+            }
+
+            // --- 유틸리티 함수 ---
+            const shuffleArray = (array) => {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            };
+
+             // --- 데이터 로딩 및 초기화 ---
+             async function initializeApp() {
+                 try {
+                     const response = await fetch('voca-core-eng.json'); // (수정)
+                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                     allWordsData = await response.json();
+                     allWords = allWordsData;
+
+                     if (allWords.length === 0) {
+                          console.warn(`단어 데이터가 없습니다.`);
+                     }
+
+                     loadProgress();
+
+                     // --- wordlist.html에서 점프했는지 확인 ---
+                     const jumpToRank = localStorage.getItem('vocaCoreEngJumpToRank'); // (수정)
+                     let startMode = 'card';
+
+                     if (jumpToRank) {
+                         const rank = parseInt(jumpToRank, 10);
+                         const jumpWord = allWordsData.find(w => w.rank === rank);
+
+                         if (jumpWord) {
+                             const jumpIndex = allWords.findIndex(w => w.rank === rank);
+                             if (jumpIndex !== -1) {
+                                 currentIndex = jumpIndex;
+                                 startMode = 'card';
+                             }
+                         }
+                         localStorage.removeItem('vocaCoreEngJumpToRank'); // (수정)
+                     }
+                     // --- 여기까지 ---
+
+                     setMode(startMode, true);
+
+                 } catch (error) {
+                     console.error("단어 데이터 로딩 실패:", error);
+                     mainContent.innerHTML = `<div class="message-container"><p>단어 파일을 불러오는 데 실패했습니다.<br>'voca-core-eng.json' 파일이 같은 폴더에 있는지 확인해주세요.</p></div>`; // (수정)
+                     progressText.textContent = '오류 발생';
+                 }
+             }
+
+
+            // --- 로컬 스토리지 관리 ---
+            function loadProgress() {
+                try {
+                    const savedProgress = localStorage.getItem(LOCAL_STORAGE_KEY);
+                    progress = savedProgress ? JSON.parse(savedProgress) : {};
+                } catch (e) { console.error("진행률 파싱 실패:", e); progress = {}; }
+            }
+
+            function saveProgress() {
+                try {
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(progress));
+                } catch (e) { console.error("진행률 저장 실패:", e); }
+            }
+
+            // --- 핵심 필터 로직 ---
+            function updateFilters() {
+                let tempWords = [...allWords];
+
+                if (currentMode === 'review') {
+                    tempWords = tempWords.filter(w => progress[w.lemma] !== true);
+                }
+
+                if (currentMode === 'grammar-quiz' || currentMode === 'cloze-quiz') {
+                    tempWords = shuffleArray(tempWords);
+                    knowledgeControls.classList.add('hidden');
+                    navigationControls.classList.add('hidden'); // (v3.5) 퀴즈 모드에서는 네비게이션 숨김
+                } else {
+                    knowledgeControls.classList.remove('hidden');
+                    updateNavigation(); // (v3.5) 카드 모드에서 네비게이션 상태 업데이트
+                }
+
+                filteredWords = tempWords;
+
+                updateContextText();
+                if (currentMode === 'card' || currentMode === 'review') {
+                    renderCard();
+                } else {
+                    renderQuiz();
+                }
+                updateGlobalProgressUI();
+            }
+
+            // --- 모드 설정 ---
+            function setMode(mode, isInitializationJump = false) {
+                currentMode = mode;
+
+                if (!isInitializationJump) {
+                    currentIndex = 0;
+                }
+
+                // (v3.5) 버튼 표시 로직 단순화
+                btnBackToQuiz.classList.add('hidden');
+
+                modeButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.mode === mode);
+                });
+
+                if (mode === 'grammar-quiz' || mode === 'cloze-quiz') {
+                    lastQuizMode = mode;
+                }
+                updateFilters();
+            }
+
+            // --- UI 렌더링: 플래시카드 ---
+            function renderCard(forceFlip = false) {
+                 if (filteredWords.length === 0 || currentIndex >= filteredWords.length) {
+                     // 인덱스 조정 로직 유지
+                     if (filteredWords.length > 0 && currentIndex >= filteredWords.length) {
+                         currentIndex = filteredWords.length -1; // (v3.5) 마지막 단어로 조정
+                     } else if (filteredWords.length === 0) {
+                         currentIndex = 0;
+                     }
+
+                     const message = (currentMode === 'review')
+                         ? '복습할 단어가 없습니다! 🎉'
+                         : (allWords.length > 0 ? '모든 단어를 학습했습니다. 👍' : '로딩 중...'); // (v3.5) 완료 메시지 수정
+                     mainContent.innerHTML = `<div class="message-container"><p>${message}</p></div>`;
+                     knowledgeControls.classList.add('hidden');
+                     navigationControls.classList.add('hidden'); // (v3.5) 완료 시 네비게이션 숨김
+                     return;
+                 }
+
+                 knowledgeControls.classList.remove('hidden');
+
+                const word = filteredWords[currentIndex];
+                 if (!word) {
+                     console.error("RenderCard: word is undefined at index", currentIndex);
+                     mainContent.innerHTML = `<div class="message-container"><p>오류: 단어를 찾을 수 없습니다.</p></div>`;
+                     return;
+                 }
+                 const inflectedFormsHTML = word.inflected_forms_found ? word.inflected_forms_found.join(', ') : 'N/A';
+                 const categoryDisplayName = word.category || 'N/A';
+
+                // 카드 HTML 생성 로직 유지 (tts 버튼 포함)
+                const cardHTML = `
+                    <div class="card-container ${forceFlip ? 'is-flipped' : ''}" id="card-container">
+                        <div class="card__inner">
+                            <div class="card__face card__face--front">
+                                <div class="card-front-header">
+                                    <p class="card-pos">${word.part_of_speech} / ${categoryDisplayName}</p>
+                                    <h2 class="card-lemma">${word.lemma}</h2>
+                                    <button class="tts-speaker-btn" id="tts-lemma-btn" title="단어 발음 듣기">🔊</button>
+                                </div>
+                                <div style="text-align:center; color: var(--secondary-color);">카드를 클릭하여 뜻 확인</div>
+                            </div>
+                            <div class="card__face card__face--back">
+                                <div class="card-content-section">
+                                    <h3>뜻</h3>
+                                    <p class="card-korean-meaning">${word.korean_meaning}</p>
+                                </div>
+                                <div class="card-content-section">
+                                    <h3>실제 기출 형태</h3>
+                                    <p class="card-inflected"><span>[실제 기출 형태]</span> ${inflectedFormsHTML}</p>
+                                </div>
+                                <div class="card-content-section">
+                                    <h3> <span>예문</span>
+                                        <button class="tts-speaker-btn" id="tts-example-btn" title="예문 발음 듣기">🔊</button>
+                                    </h3>
+                                    <p class="card-example">"${word.example_sentence_source || '예문 없음'}"</p>
+                                    <p class="card-example-translation">${word.example_sentence_translation || '번역 없음'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                mainContent.innerHTML = cardHTML;
+
+                // TTS 이벤트 리스너 추가 (로직 유지)
+                const ttsLemmaBtn = document.getElementById('tts-lemma-btn');
+                const ttsExampleBtn = document.getElementById('tts-example-btn');
+                if (ttsLemmaBtn) {
+                    ttsLemmaBtn.addEventListener('click', (e) => { e.stopPropagation(); speakText(word.lemma, 'en-US'); }); // (수정)
+                }
+                if (ttsExampleBtn && word.example_sentence_source) {
+                    ttsExampleBtn.addEventListener('click', (e) => { e.stopPropagation(); speakText(word.example_sentence_source, 'en-US'); }); // (수정)
+                } else if (ttsExampleBtn) {
+                    ttsExampleBtn.disabled = true;
+                    ttsExampleBtn.style.opacity = 0.5;
+                 }
+
+
+                // 카드 뒤집기 리스너 (로직 유지)
+                document.getElementById('card-container').addEventListener('click', () => {
+                    document.getElementById('card-container').classList.toggle('is-flipped');
+                });
+
+                updateNavigation(); // (v3.5) 네비게이션 상태 업데이트
+            }
+
+            // --- UI 렌더링: 퀴즈 ---
+            function renderQuiz() {
+                 navigationControls.classList.add('hidden'); // 퀴즈 모드에서는 항상 숨김
+
+                 if (filteredWords.length === 0 || currentIndex >= filteredWords.length) {
+                     // 완료 메시지 표시 로직 유지
+                     if (currentIndex >= filteredWords.length && filteredWords.length > 0) {
+                         currentIndex = filteredWords.length -1; // 마지막 문제로 조정
+                     }
+
+                     if (filteredWords.length === 0 || currentIndex >= filteredWords.length) {
+                          mainContent.innerHTML = `<div class="message-container"><p>모든 퀴즈를 완료했습니다! 🥳</p></div>`;
+                          return;
+                     }
+                 }
+
+                const word = filteredWords[currentIndex];
+                let quizHTML = '';
+
+                if (currentMode === 'grammar-quiz') {
+                    quizHTML = generateGrammarQuiz(word, allWords);
+                } else { // cloze-quiz
+                    quizHTML = generateClozeQuiz(word, allWords);
+                }
+
+                mainContent.innerHTML = quizHTML;
+
+                // 퀴즈 옵션 버튼 이벤트 리스너 (로직 유지)
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        handleQuizAnswer(e.target.dataset.option, e.target.dataset.answer, e.target);
+                    });
+                });
+
+                 // (v3.5) 퀴즈 렌더링 후 다음 버튼 클릭 핸들러 추가
+                 const btnNextQuiz = document.getElementById('btn-next-quiz');
+                 if(btnNextQuiz) {
+                     btnNextQuiz.onclick = () => handleNavigation(1); // 다음 문제로 이동
+                 }
+                 const btnReviewMistake = document.getElementById('btn-review-mistake');
+                 if(btnReviewMistake) {
+                     const currentWord = filteredWords[currentIndex];
+                     if (currentWord) { // currentWord가 유효한지 확인
+                        btnReviewMistake.onclick = () => jumpToReview(currentWord.lemma);
+                     } else {
+                        console.error("RenderQuiz: Cannot set onclick for btnReviewMistake, currentWord is invalid.");
+                     }
+                 }
+            }
+
+
+            // --- 문법 퀴즈 생성기 (로직 유지) ---
+            function generateGrammarQuiz(word, wordPool) {
+                 if (!word.example_sentence_source || !word.inflected_forms_found || word.inflected_forms_found.length === 0) {
+                     return `<div class="message-container"><p>이 단어에 대한 문법 퀴즈를 생성할 수 없습니다.</p><button onclick="window.handleNavigation(1)" class="btn-next-quiz" style="margin-top: 1rem;">다음 문제로 ▶</button></div>`; // (v3.5) onclick 수정
+                 }
+                 // 나머지 로직은 동일
+                const sortedForms = [...word.inflected_forms_found].sort((a, b) => b.length - a.length);
+                 let correctForm = sortedForms.find(form => word.example_sentence_source.toLowerCase().includes(form.toLowerCase()));
+                if (!correctForm) correctForm = word.inflected_forms_found[0];
+
+                 const sentence = word.example_sentence_source;
+                 let questionSentence = sentence;
+                 try {
+                    const regex = new RegExp(`\\b${correctForm}\\b`, 'gi');
+                     if (regex.test(sentence)) {
+                        questionSentence = sentence.replace(regex, "<strong>_____</strong>");
+                    } else {
+                         const index = sentence.toLowerCase().indexOf(correctForm.toLowerCase());
+                         if(index !== -1) {
+                             questionSentence = sentence.substring(0, index) + "<strong>_____</strong>" + sentence.substring(index + correctForm.length);
+                         } else {
+                             console.warn(`Cannot find correctForm '${correctForm}' in sentence: ${sentence}`);
+                              questionSentence = sentence + " (Choose form for: " + word.lemma + ")";
+                         }
+                    }
+                 } catch(e) {
+                      console.error("Error creating question sentence:", e);
+                      questionSentence = sentence.replace(correctForm, "<strong>_____</strong>");
+                 }
+
+
+                let options = [...new Set(word.inflected_forms_found)];
+                let attempts = 0;
+                while (options.length < 4 && wordPool.length > options.length && attempts < 50) {
+                    const randomWordIndex = Math.floor(Math.random() * wordPool.length);
+                    const randomWord = wordPool[randomWordIndex];
+                     if (randomWord.lemma !== word.lemma && randomWord.inflected_forms_found && randomWord.inflected_forms_found.length > 0) {
+                        const randomForm = randomWord.inflected_forms_found[Math.floor(Math.random() * randomWord.inflected_forms_found.length)];
+                        if (!options.includes(randomForm)) {
+                            options.push(randomForm);
+                        }
+                    }
+                    attempts++;
+                }
+
+                 if (options.length > 4) {
+                     let wrongOptions = options.filter(opt => opt !== correctForm);
+                     wrongOptions = shuffleArray(wrongOptions);
+                     options = [correctForm, ...wrongOptions.slice(0, 3)];
+                 } else if (!options.includes(correctForm)) {
+                      if(options.length > 0) options.pop();
+                      options.push(correctForm);
+                 }
+
+
+                options = shuffleArray(options);
+
+                const optionsHTML = options.map(opt =>
+                    `<button class="option-btn" data-option="${opt}" data-answer="${correctForm}">${opt}</button>`
+                ).join('');
+
+                return `
+                    <div class="quiz-container">
+                        <div>
+                            <p class="quiz-question-sentence">${questionSentence}</p>
+                            <p class="quiz-hint">문맥에 맞는 '실전 형태'를 고르세요.</p>
+                        </div>
+                        <div class="quiz-options">
+                            ${optionsHTML}
+                        </div>
+                        <div id="quiz-feedback" class="quiz-feedback hidden">
+                            <p id="feedback-message"></p>
+                            <button id="btn-review-mistake" class="btn-review-mistake"></button>
+                            <button id="btn-next-quiz" class="btn-next-quiz">다음 문제로 ▶</button>
+                        </div>
+                    </div>`;
+            }
+
+            // --- 예문 퀴즈 생성기 (로직 유지) ---
+            function generateClozeQuiz(word, wordPool) {
+                 if (!word.example_sentence_source) {
+                      return `<div class="message-container"><p>이 단어에 대한 예문 퀴즈를 생성할 수 없습니다.</p><button onclick="window.handleNavigation(1)" class="btn-next-quiz" style="margin-top: 1rem;">다음 문제로 ▶</button></div>`; // (v3.5) onclick 수정
+                 }
+                // 나머지 로직은 동일
+                 let questionSentence = word.example_sentence_source;
+                 let correctLemma = word.lemma;
+                  try {
+                       const regex = new RegExp(`\\b${word.lemma}\\b`, 'gi');
+                       if (regex.test(questionSentence)) {
+                           questionSentence = questionSentence.replace(regex, "<strong>_____</strong>");
+                       } else {
+                            const index = questionSentence.toLowerCase().indexOf(word.lemma.toLowerCase());
+                            if(index !== -1) {
+                                questionSentence = questionSentence.substring(0, index) + "<strong>_____</strong>" + questionSentence.substring(index + word.lemma.length);
+                            } else {
+                                 const formsInSentence = word.inflected_forms_found?.filter(f => questionSentence.toLowerCase().includes(f.toLowerCase())) || [];
+                                 if (formsInSentence.length > 0) {
+                                      const formToReplace = formsInSentence.sort((a,b)=> b.length - a.length)[0];
+                                      const formRegex = new RegExp(`\\b${formToReplace}\\b`, 'gi');
+                                       if(formRegex.test(questionSentence)) {
+                                           questionSentence = questionSentence.replace(formRegex, "<strong>_____</strong>");
+                                       } else {
+                                            const formIndex = questionSentence.toLowerCase().indexOf(formToReplace.toLowerCase());
+                                             if(formIndex !== -1) {
+                                                 questionSentence = questionSentence.substring(0, formIndex) + "<strong>_____</strong>" + questionSentence.substring(formIndex + formToReplace.length);
+                                             }
+                                       }
+                                 } else {
+                                     console.warn(`Cannot find lemma '${word.lemma}' or its forms in sentence: ${questionSentence}`);
+                                      questionSentence = questionSentence + " (Choose lemma: " + word.lemma + ")";
+                                 }
+                            }
+                       }
+                  } catch(e) {
+                      console.error("Error creating cloze question:", e);
+                       const regexFallback = new RegExp(`\\b${word.lemma}\\b`, 'gi');
+                       questionSentence = word.example_sentence_source.replace(regexFallback, "<strong>_____</strong>");
+                  }
+
+                const hint = `힌트: ${word.korean_meaning}`;
+
+                let options = [correctLemma];
+                let attempts = 0;
+                while (options.length < 4 && wordPool.length > options.length && attempts < 50) {
+                    const randomWord = wordPool[Math.floor(Math.random() * wordPool.length)];
+                    if (randomWord.lemma !== correctLemma && !options.includes(randomWord.lemma)) {
+                        options.push(randomWord.lemma);
+                    }
+                    attempts++;
+                }
+                options = shuffleArray(options);
+
+                const optionsHTML = options.map(opt =>
+                    `<button class="option-btn" data-option="${opt}" data-answer="${correctLemma}">${opt}</button>`
+                ).join('');
+
+                return `
+                    <div class="quiz-container">
+                        <div>
+                            <p class="quiz-question-sentence">${questionSentence}</p>
+                            <p class="quiz-hint">${hint}</p>
+                        </div>
+                        <div class="quiz-options">
+                            ${optionsHTML}
+                        </div>
+                        <div id="quiz-feedback" class="quiz-feedback hidden">
+                            <p id="feedback-message"></p>
+                            <button id="btn-review-mistake" class="btn-review-mistake"></button>
+                            <button id="btn-next-quiz" class="btn-next-quiz">다음 문제로 ▶</button>
+                        </div>
+                    </div>`;
+            }
+
+
+            // --- 퀴즈 정답 처리 ---
+            function handleQuizAnswer(selectedOption, correctOption, buttonElement) {
+                document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+
+                const feedbackContainer = document.getElementById('quiz-feedback');
+                const feedbackMessage = document.getElementById('feedback-message');
+                const btnReviewMistake = document.getElementById('btn-review-mistake');
+                const btnNextQuiz = document.getElementById('btn-next-quiz');
+
+                feedbackContainer.classList.remove('hidden');
+                // navigationControls는 퀴즈 모드에서 항상 숨겨져 있음
+
+                const currentWord = filteredWords[currentIndex];
+                let isCorrect = (selectedOption === correctOption);
+
+                if (isCorrect) {
+                    buttonElement.classList.add('correct');
+                    feedbackMessage.textContent = "정답입니다! 🥳";
+                    feedbackMessage.className = 'correct';
+                    btnReviewMistake.classList.add('hidden');
+                    progress[currentWord.lemma] = true;
+                    // (v3.5) 다음 버튼 onclick은 renderQuiz에서 설정
+                } else {
+                    buttonElement.classList.add('incorrect');
+                     const correctButton = document.querySelector(`.option-btn[data-option="${correctOption}"]`);
+                     if (correctButton) correctButton.classList.add('correct');
+
+                    feedbackMessage.textContent = "아쉽네요. 다시 확인해볼까요?";
+                    feedbackMessage.className = 'incorrect';
+
+                     let wordToReviewLemma = currentWord.lemma; // 여기서 lemma를 가져옴
+
+                    btnReviewMistake.textContent = `❔ '${wordToReviewLemma}' 복습하기`;
+                    btnReviewMistake.classList.remove('hidden');
+                    // (v3.5) 복습 버튼 onclick은 renderQuiz에서 설정
+
+                    progress[currentWord.lemma] = false;
+                     // (v3.5) 다음 버튼 onclick은 renderQuiz에서 설정
+                }
+
+                saveProgress();
+                updateGlobalProgressUI();
+            }
+
+            // --- '즉시 복습' 점프 기능 ---
+             function jumpToReview(lemmaToReview) {
+                 quizReturnIndex = currentIndex;
+
+                 const reviewWord = allWordsData.find(w => w.lemma === lemmaToReview);
+                 if (!reviewWord) {
+                     console.error(`Cannot find word with lemma: ${lemmaToReview}`);
+                     return;
+                 }
+
+                 const reviewIndex = allWords.findIndex(w => w.lemma === lemmaToReview);
+                 if (reviewIndex === -1) return;
+
+
+                 // '플래시카드' 모드로 강제 전환
+                 currentMode = 'card';
+                 modeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === 'card'));
+
+                 updateFilters(); // 필터 업데이트 (filteredWords 갱신)
+
+                 currentIndex = reviewIndex; // 해당 단어 인덱스로 설정
+
+                 knowledgeControls.classList.add('hidden'); // 복습 시 알아요/몰라요 숨김
+
+                 navigationControls.classList.remove('hidden'); // 네비게이션 보이게
+                 btnBackToQuiz.classList.remove('hidden'); // 퀴즈 복귀 버튼 표시
+                 // (v3.5) 이전/다음 버튼 제거됨
+
+                 renderCard(true); // 카드 뒷면 강제 표시
+             }
+
+
+             // --- UI 업데이트 ---
+             // 전역 진행률 UI 업데이트 (로직 유지)
+             function updateGlobalProgressUI() {
+                 const totalCount = allWords.length;
+                 if (totalCount === 0) return;
+
+                 const knownCount = allWords.filter(w => progress[w.lemma] === true).length;
+
+                 const percentage = (knownCount / totalCount) * 100;
+                 progressText.textContent = `전체 단어: ${knownCount} / ${totalCount}개 (${percentage.toFixed(0)}%)`;
+                 progressBarInner.style.width = `${percentage}%`;
+             }
+
+            // 컨텍스트 텍스트 업데이트 (로직 유지)
+             function updateContextText() {
+                 const modeName = MODE_NAMES[currentMode] || currentMode;
+                 let text = `전체 단어 | ${modeName}`;
+                 text += ` (${filteredWords.length}개 학습)`;
+                 contextText.textContent = text;
+             }
+
+
+             // (v3.5) 네비게이션 업데이트 함수 수정
+             function updateNavigation() {
+                 // 퀴즈 복귀 버튼이 보이면 항상 그것만 표시
+                 if (!btnBackToQuiz.classList.contains('hidden')) {
+                     navigationControls.classList.remove('hidden');
+                 }
+                 // 플래시카드/리뷰 모드이고, 복귀 버튼이 숨겨져 있으면 네비게이션 영역 숨김
+                 else if (currentMode === 'card' || currentMode === 'review') {
+                     navigationControls.classList.add('hidden');
+                 }
+                 // 퀴즈 모드에서는 이미 숨겨져 있음 (renderQuiz에서 처리)
+             }
+
+            // --- 이벤트 핸들러: 네비게이션 (v3.5 수정) ---
+            // handleNavigation은 이제 다음 카드/퀴즈로 넘어가는 역할만 함
+            function handleNavigation(direction) {
+                 // 퀴즈 피드백 숨김 로직 유지
+                 const feedbackContainer = document.getElementById('quiz-feedback');
+                 if (feedbackContainer && !feedbackContainer.classList.contains('hidden') && (currentMode === 'grammar-quiz' || currentMode === 'cloze-quiz')) {
+                      feedbackContainer.classList.add('hidden');
+                 }
+
+                 const newIndex = currentIndex + direction;
+
+                 // 인덱스 범위 확인 및 업데이트 로직 유지
+                 if (newIndex >= 0 && newIndex < filteredWords.length) {
+                     currentIndex = newIndex;
+                 } else if (newIndex >= filteredWords.length) {
+                     // 마지막 단어/퀴즈 이후 처리 (렌더링 함수에서 완료 메시지 표시)
+                     currentIndex = filteredWords.length; // 인덱스를 배열 길이로 설정하여 완료 상태 표시
+                 } else {
+                     // 첫 단어 이전으로 가려고 할 때 (이전 버튼 없으므로 실제 발생 안 함)
+                     return;
+                 }
+
+                // 현재 모드에 따라 렌더링 함수 호출
+                if (currentMode === 'card' || currentMode === 'review') {
+                    renderCard();
+                } else {
+                    renderQuiz();
+                }
+            }
+             // (v3.5) handleNavigation을 전역 스코프에 노출 (퀴즈 HTML onclick에서 사용)
+             window.handleNavigation = handleNavigation;
+
+
+            // --- 이벤트 핸들러: 플래시카드 상태 저장 (v3.5 수정) ---
+            function markWord(isKnown) {
+                if (filteredWords.length === 0 || currentIndex >= filteredWords.length) return;
+
+                const currentWord = filteredWords[currentIndex];
+                progress[currentWord.lemma] = isKnown;
+                saveProgress();
+                updateGlobalProgressUI();
+
+                // '몰라요' 복습 모드에서 '알아요'를 누르면 목록에서 제거
+                if (currentMode === 'review' && isKnown) {
+                     // filteredWords에서 현재 단어 제거
+                     filteredWords.splice(currentIndex, 1);
+
+                     // 인덱스 조정: 제거 후 현재 인덱스가 배열 범위를 벗어나면 마지막 요소로
+                      if (currentIndex >= filteredWords.length) {
+                          currentIndex = Math.max(0, filteredWords.length - 1);
+                      }
+                      // 제거 후에도 현재 인덱스가 유효하면 그대로 유지 (다음 렌더링 시 현재 인덱스 단어 표시)
+
+                     // 잠시 후 다음 카드 렌더링 (즉시 렌더링하면 제거 효과가 잘 안 보일 수 있음)
+                     setTimeout(() => {
+                          renderCard(); // 현재 인덱스로 다시 렌더링
+                          updateContextText();
+                     }, 150);
+                 } else {
+                     // 그 외의 경우 (일반 카드 모드 또는 '몰라요'에서 '몰라요' 클릭) 다음 카드로 이동
+                     setTimeout(() => { handleNavigation(1); }, 150); // 다음 카드로 넘어감
+                 }
+            }
+
+            // --- 이벤트 리스너 연결 ---
+            // (v3.5) btnPrev, btnNext 리스너 제거
+            btnKnown.addEventListener('click', () => markWord(true));
+            btnUnknown.addEventListener('click', () => markWord(false));
+
+            modeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // currentIndex = 0; // 모드 변경 시 첫 카드로 (setMode에서 처리)
+                    setMode(btn.dataset.mode);
+                });
+            });
+
+
+            btnBackToQuiz.addEventListener('click', () => {
+                 setMode(lastQuizMode); // 이전 퀴즈 모드로 설정
+                 currentIndex = quizReturnIndex; // 이전 퀴즈 인덱스로 복귀
+                 renderQuiz(); // 해당 퀴즈 다시 렌더링
+             });
+
+
+            // --- 애플리케이션 시작 ---
+            initializeApp();
+        });
+    </script>
+</body>
+</html>

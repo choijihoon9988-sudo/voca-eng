@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voca-Core 9 (Eng): 전체 단어 목록 (빈출 순)</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745; /* (v3.3) 버튼용 */
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --background-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            color: var(--dark-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+
+       .app-container {
+            width: 100%;
+            max-width: 900px; /* (v3.3) 좀 더 넓게 */
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1rem; /* (v3.3) 필터와의 간격 */
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+         header p {
+             color: var(--secondary-color);
+             font-size: 0.9rem;
+         }
+
+        /* --- (v3.3) 주제 필터 탭 스타일 (index.html에서 복사) --- */
+       .tabs-container {
+            width: 100%;
+            background-color: #E0E7FF; /* index.html의 category-filter 색상 */
+            border-radius: var(--border-radius);
+            padding: 5px;
+            margin-bottom: 1.5rem; /* 테이블과의 간격 */
+       }
+       .tabs-grid {
+            display: flex;
+            flex-wrap: wrap; /* 좁은 화면 대응 */
+            gap: 5px;
+            justify-content: center; /* 버튼 중앙 정렬 */
+       }
+       .tabs-grid button {
+            flex: 1 1 auto;
+            min-width: 80px;
+            padding: 0.7rem 0.5rem;
+            border: none;
+            background-color: transparent;
+            color: var(--secondary-color);
+            font-size: 0.85rem; /* (v3.3) 버튼이 많으므로 폰트 축소 */
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 9px;
+            transition: all 0.3s ease;
+       }
+       .tabs-grid button:hover:not(.active) {
+            background-color: #d1d9ff;
+       }
+       .tabs-grid button.active {
+            background-color: var(--card-bg);
+            color: #3730A3; /* index.html의 활성 색상 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+       }
+       /* --- 여기까지 --- */
+
+
+        /* 표 스타일 */
+       .word-table-container {
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.95rem;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: var(--light-color);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10; 
+        }
+        
+        /* (v3.5) 3열 기준으로 너비 재조정 - 주제 열 제거 */
+        th:first-child, td:first-child { /* 순번 */
+            width: 10%;
+            text-align: center;
+            color: var(--secondary-color);
+        }
+        th:nth-child(2), td:nth-child(2) { /* 영어 (Lemma) */
+            width: 40%;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        th:nth-child(3), td:nth-child(3) { /* 한국어 뜻 */
+            width: 50%;
+            color: var(--dark-color);
+        }
+        /* th:last-child, td:last-child { (기존 '주제' 열 CSS 삭제) */
+
+
+        /* (수정) 행 스타일 */
+         tbody tr {
+             cursor: pointer; /* 클릭 가능 표시 */
+         }
+         tbody tr:nth-child(odd) {
+             background-color: #f8f9fa;
+         }
+         tbody tr:hover {
+             background-color: #e9ecef;
+         }
+
+
+       .navigation-button {
+            display: inline-block;
+            width: auto;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            background-color: var(--success-color);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+       .navigation-button:hover {
+            background-color: #218838;
+        }
+        
+       /* PDF 자료실 버튼용 스타일 */
+       .navigation-button.secondary {
+            background-color: var(--primary-color);
+       }
+       .navigation-button.secondary:hover {
+            background-color: #0056b3; 
+       }
+       
+       /* (v3.4) 새로 추가된 버튼 스타일 */
+       .navigation-button#btn-save-pdf {
+            background-color: #5A6A7E; /* 짙은 회색으로 구분 */
+       }
+       .navigation-button#btn-save-pdf:hover {
+            background-color: #4A5A6E; 
+       }
+
+
+       .loading-message {
+           text-align: center;
+           color: var(--secondary-color);
+           padding: 2rem;
+       }
+        
+       .button-container {
+           display: flex;
+           flex-wrap: wrap;
+           justify-content: center;
+           gap: 1rem;
+           margin-top: 1.5rem; /* 테이블 사이 간격 */
+       }
+
+        /* --- 단어 상세 모달 스타일 --- */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 1rem;
+            cursor: pointer; /* 닫기 암시 */
+        }
+        .modal-content {
+            width: 100%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 2rem;
+            cursor: default; /* 모달 컨텐츠는 기본 커서 */
+        }
+        .hidden {
+            display: none !important;
+        }
+        
+        .modal-content .card-header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .modal-content .card-lemma {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            margin-right: 0.5rem;
+        }
+        .modal-content .card-pos {
+            font-size: 0.9rem;
+            font-style: italic;
+            color: var(--secondary-color);
+            width: 100%;
+            margin-bottom: 0.25rem;
+        }
+        .modal-content .card-content-section {
+            margin-top: 1.5rem;
+        }
+        .modal-content .card-content-section h3 {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-content .card-korean-meaning {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        .modal-content .card-inflected {
+            font-size: 1rem;
+            color: var(--primary-color);
+            font-weight: 500;
+            line-height: 1.5;
+            word-break: break-all;
+        }
+       .modal-content .card-inflected span {
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        .modal-content .card-example {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        .modal-content .card-example-translation {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            margin-top: 0.5rem;
+        }
+        .modal-content .tts-speaker-btn {
+            font-size: 1.5rem; /* 아이콘 크기 */
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0 0.5rem;
+            vertical-align: middle;
+            color: var(--secondary-color);
+            transition: color 0.2s ease;
+        }
+        .modal-content .tts-speaker-btn:hover {
+            color: var(--primary-color);
+        }
+        .modal-content .card-content-section h3 .tts-speaker-btn {
+            font-size: 1.2rem; /* 뒷면 아이콘은 조금 작게 */
+        }
+        /* --- 여기까지 --- */
+        
+        /* --- PDF 저장(인쇄)용 스타일 --- */
+        @media print {
+            /* 모든 것을 기본적으로 숨김 */
+            body * {
+                visibility: hidden;
+            }
+            
+            /* 인쇄할 영역만 보이게 함 */
+            #wordlist-to-print, #wordlist-to-print * {
+                visibility: visible;
+                /* 테이블 관련 요소의 배경/스타일 조정 */
+                background-color: transparent !important;
+                color: black !important;
+            }
+
+            /* 인쇄 영역을 페이지에 맞춤 */
+           .app-container, .word-table-container, #wordlist-to-print {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                position: static;
+                /* 인쇄 용지 가장자리로 테이블이 확장되도록 */
+                transform: none; 
+            }
+            
+            /* 테이블 헤더 sticky 해제 (인쇄 시) */
+            th {
+                position: static; 
+                background-color: #f0f0f0 !important; /* 인쇄 시 헤더 배경색 */
+            }
+            
+            /* 테이블 테두리 강제 표시 */
+            th, td {
+                 border-color: #000 !important;
+            }
+        }
+
+        /* --- (신규) 푸터 스타일 --- */
+       .app-footer {
+            width: 100%;
+            max-width: 900px; /* app-container와 동일하게 */
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            margin-top: 1rem;
+            line-height: 1.6;
+        }
+       .app-footer p {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>Voca-Core 9 (Eng): 전체 단어 목록 (빈출 순)</h1>
+            <p id="total-word-count">총 0개의 영어 단어 (빈출도 순서)</p>
+        </header>
+
+        <nav class="tabs-container category-filter">
+            <div class="tabs-grid" id="category-filter-grid">
+                <button class="category-btn active" data-category="all">로딩 중...</button>
+            </div>
+        </nav>
+
+        <div id="wordlist-to-print"> <div class="word-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>순번 (Rank)</th>
+                            <th>영어 (Lemma)</th>
+                            <th>한국어 뜻</th>
+                            </tr>
+                    </thead>
+                    <tbody id="word-table-body">
+                        <tr>
+                            <td colspan="3" class="loading-message">단어 목록 로딩 중...</td> </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div> <div class="button-container">
+             <a href="pdf_library.html" class="navigation-button secondary">&larr; PDF 자료실 가기</a>
+             <button id="btn-save-pdf" class="navigation-button" style="background-color: #007bff;">단어 목록 PDF 저장</button> 
+             <a href="index.html" class="navigation-button">Voca-Core 9 (Eng) 빈출 순서 학습 시작하기 &rarr;</a>
+        </div>
+    </div>
+
+    <div id="word-modal-backdrop" class="modal-backdrop hidden">
+        <div id="word-modal-content" class="modal-content">
+            </div>
+    </div>
+
+    <footer class="app-footer">
+        <p>© 지후를 가장 응원하는 최재영</p>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const tableBody = document.getElementById('word-table-body');
+            const modalBackdrop = document.getElementById('word-modal-backdrop');
+            const modalContent = document.getElementById('word-modal-content');
+            const totalWordCount = document.getElementById('total-word-count'); 
+            const categoryFilterGrid = document.getElementById('category-filter-grid'); 
+            const btnSavePdf = document.getElementById('btn-save-pdf'); // (v3.4) PDF 저장 버튼
+            
+            let allWords = [];
+            let currentUtterance = null; // (v3.4) 모바일 TTS 재생용 참조
+
+            // (v3.3) 카테고리 이름 매핑 (축약)
+             const CATEGORY_NAMES = {
+                 'all': '전체',
+                 '기본 형용사/부사': '형용사/부사',
+                 '의문사/감탄사': '의문사/감탄'
+                 // (Eng v1.0) 영어 카테고리는 '영어.txt' 파일 기준으로 동적 생성됩니다.
+             };
+
+            // (v3.4 모바일 호환성 수정)
+            function speakText(text, lang = 'en-US') { // (Eng v1.0) 언어 코드 'es-ES' -> 'en-US'로 변경
+                if (!('speechSynthesis' in window)) {
+                    console.warn('Speech synthesis not supported.');
+                    return;
+                }
+                
+                window.speechSynthesis.cancel(); // 이전 발음 취소
+
+                // 모바일(특히 iOS)에서 Utterance 객체가 가비지 컬렉션되어
+                // 발음이 중단되는 것을 방지하기 위해 참조를 유지합니다.
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                currentUtterance.lang = lang;
+                currentUtterance.rate = 0.9;
+
+                currentUtterance.onerror = (event) => {
+                    console.error('SpeechSynthesisUtterance.onerror', event);
+                    currentUtterance = null;
+                };
+                currentUtterance.onend = () => {
+                    currentUtterance = null;
+                };
+                
+                window.speechSynthesis.speak(currentUtterance);
+            }
+
+            try {
+                // (Eng v1.0) '스페인어.txt' -> '영어.txt'로 변경
+                const response = await fetch('영어.txt');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                allWords = await response.json();
+
+                // (Eng v1.0) 총 단어 수 업데이트 (스페인어 -> 영어)
+                totalWordCount.textContent = `총 ${allWords.length}개의 영어 단어 (빈출도 순서)`;
+
+                // (v3.3) 주제 필터 탭 생성
+                initializeCategoryFilters(allWords);
+
+                renderWordTable();
+
+                modalBackdrop.addEventListener('click', hideWordModal);
+                modalContent.addEventListener('click', (e) => e.stopPropagation());
+                
+                // (v3.4) PDF 저장 기능 연결
+                if (btnSavePdf) {
+                    btnSavePdf.addEventListener('click', () => {
+                        window.print();
+                    });
+                }
+
+
+            } catch (error) {
+                console.error("단어 데이터 로딩 실패:", error);
+                // (Eng v1.0) 오류 메시지 수정
+                tableBody.innerHTML = `<tr><td colspan="3" class="loading-message">단어 파일을 불러오는 데 실패했습니다.<br>'영어.txt' 파일이 같은 폴더에 있는지 확인해주세요.</td></tr>`; 
+                categoryFilterGrid.innerHTML = `<button class="category-btn active" data-category="all">필터 로드 실패</button>`; // (v3.3)
+            }
+
+            // (v3.3) 주제 필터 탭을 동적으로 생성하는 함수
+            function initializeCategoryFilters(words) {
+                 const categoryCounts = words.reduce((acc, word) => {
+                     const category = word.category || '기타'; // (v3.3) '기타' 카테고리 처리
+                     acc[category] = (acc[category] || 0) + 1;
+                     return acc;
+                 }, {});
+
+                 categoryFilterGrid.innerHTML = ''; // 기존 버튼 초기화
+
+                 // '전체' 버튼 추가
+                 const allButton = document.createElement('button');
+                 allButton.classList.add('category-btn', 'active');
+                 allButton.dataset.category = 'all';
+                 allButton.textContent = `전체 (${words.length})`;
+                 allButton.addEventListener('click', (e) => filterWordTable('all', e.currentTarget));
+                 categoryFilterGrid.appendChild(allButton);
+
+                 // 데이터에 있는 카테고리 버튼 추가 (정렬된 순서로)
+                 Object.keys(categoryCounts).sort().forEach(category => {
+                     const button = document.createElement('button');
+                     button.classList.add('category-btn');
+                     button.dataset.category = category;
+                     const displayName = CATEGORY_NAMES[category] || category; // 맵핑된 이름 사용
+                     button.textContent = `${displayName} (${categoryCounts[category]})`;
+                     button.addEventListener('click', (e) => filterWordTable(category, e.currentTarget));
+                     categoryFilterGrid.appendChild(button);
+                 });
+            }
+
+            // (v3.3) 테이블을 필터링하는 함수
+            function filterWordTable(category, clickedButton) {
+                // 탭 활성 상태 업데이트
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                clickedButton.classList.add('active');
+
+                // 테이블 행 필터링
+                const tableRows = tableBody.getElementsByTagName('tr');
+                let visibleCount = 0;
+                for (const row of tableRows) {
+                    if (category === 'all' || row.dataset.category === category) {
+                        row.style.display = ''; // 'tr'의 기본 표시 (table-row)
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            }
+
+
+            // 단어 테이블을 화면에 렌더링하는 함수
+            function renderWordTable() {
+                tableBody.innerHTML = '';
+                if (allWords.length === 0) {
+                     // colspan을 3으로 변경
+                     tableBody.innerHTML = `<tr><td colspan="3" class="loading-message">표시할 단어가 없습니다.</td></tr>`; 
+                     return;
+                }
+
+                allWords.forEach((word) => { 
+                    const tableRow = document.createElement('tr');
+                    
+                    // (v3.3) 필터링을 위해 행에 data-category 속성 유지
+                    tableRow.dataset.category = word.category || '기타';
+
+                    // (v3.4) 순번 셀
+                    const rankCell = document.createElement('td');
+                    rankCell.textContent = word.rank; 
+                    rankCell.style.textAlign = 'center';
+                    rankCell.style.fontSize = '0.9rem'; 
+
+                    const lemmaCell = document.createElement('td');
+                    lemmaCell.textContent = word.lemma;
+
+                    const meaningCell = document.createElement('td');
+                    meaningCell.textContent = word.korean_meaning;
+                    
+                    // (v3.5) 주제 셀 생성 및 추가 로직 제거
+
+                    tableRow.appendChild(rankCell);
+                    tableRow.appendChild(lemmaCell);
+                    tableRow.appendChild(meaningCell);
+
+                    tableRow.addEventListener('click', (e) => {
+                        e.stopPropagation(); 
+                        showWordModal(word);
+                    });
+
+                    tableBody.appendChild(tableRow);
+                });
+            }
+
+            // (수정) 단어 모달을 표시하는 함수
+            function showWordModal(word) {
+                const inflectedFormsHTML = word.inflected_forms_found ? word.inflected_forms_found.join(', ') : 'N/A';
+                // (v3.3) 카테고리 표시
+                const categoryDisplayName = CATEGORY_NAMES[word.category] || word.category || 'N/A';
+
+                // 모달에 표시될 HTML 컨텐츠 생성
+                const modalHTML = `
+                    <div class="card-header">
+                        <p class="card-pos">${word.part_of_speech} / ${categoryDisplayName}</p>
+                        <h2 class="card-lemma">${word.lemma}</h2>
+                        <button class="tts-speaker-btn" id="tts-lemma-btn-modal" title="단어 발음 듣기">🔊</button>
+                    </div>
+
+                    <div class="card-content-section">
+                        <h3>뜻</h3>
+                        <p class="card-korean-meaning">${word.korean_meaning}</p>
+                    </div>
+
+                    <div class="card-content-section">
+                        <h3>실제 기출 형태</h3>
+                        <p class="card-inflected"><span>[실제 기출 형태]</span> ${inflectedFormsHTML}</p>
+                    </div>
+
+                    <div class="card-content-section">
+                        <h3> <span>예문</span>
+                            <button class="tts-speaker-btn" id="tts-example-btn-modal" title="예문 발음 듣기">🔊</button>
+                        </h3>
+                        <p class="card-example">"${word.example_sentence_source || '예문 없음'}"</p>
+                        <p class="card-example-translation">${word.example_sentence_translation || '번역 없음'}</p>
+                    </div>
+                `;
+                
+                modalContent.innerHTML = modalHTML; 
+
+                const ttsLemmaBtn = document.getElementById('tts-lemma-btn-modal');
+                const ttsExampleBtn = document.getElementById('tts-example-btn-modal');
+                
+                if (ttsLemmaBtn) {
+                    ttsLemmaBtn.addEventListener('click', (e) => { 
+                        e.stopPropagation(); 
+                        speakText(word.lemma); 
+                    });
+                }
+                
+                if (ttsExampleBtn && word.example_sentence_source) {
+                    ttsExampleBtn.addEventListener('click', (e) => { 
+                        e.stopPropagation(); 
+                        speakText(word.example_sentence_source); 
+                    });
+                } else if (ttsExampleBtn) {
+                    ttsExampleBtn.disabled = true;
+                    ttsExampleBtn.style.opacity = 0.5;
+                }
+
+                modalBackdrop.classList.remove('hidden');
+            }
+
+            // (추가) 단어 모달을 숨기는 함수
+            function hideWordModal() {
+                modalBackdrop.classList.add('hidden');
+                modalContent.innerHTML = ''; // 모달 내용을 비워 리소스 정리
+                window.speechSynthesis.cancel(); // 모달 닫을 때 음성 중지
+            }
+            
+        });
+    </script>
+
+</body>
+</html>
